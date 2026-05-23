@@ -9,6 +9,7 @@ public class FoodDetails {
         public String foodItem;
         public double price;
         public int destinationIndex;
+        public int height; // Added for AVL tree
         Node left, right;
 
         Node(int orderId, String customerName, String foodItem, double price, int destinationIndex) {
@@ -17,6 +18,7 @@ public class FoodDetails {
             this.foodItem = foodItem;
             this.price = price;
             this.destinationIndex = destinationIndex;
+            this.height = 1; // New nodes start at height 1
             right = null;
             left = null;
         }
@@ -58,6 +60,52 @@ public class FoodDetails {
         }
     }
 
+    // --- AVL TREE LOGIC START ---
+
+    private int height(Node N) {
+        if (N == null) return 0;
+        return N.height;
+    }
+
+    private int max(int a, int b) {
+        return (a > b) ? a : b;
+    }
+
+    private int getBalance(Node N) {
+        if (N == null) return 0;
+        return height(N.left) - height(N.right);
+    }
+
+    private Node rightRotate(Node y) {
+        Node x = y.left;
+        Node T2 = x.right;
+
+        // Perform rotation
+        x.right = y;
+        y.left = T2;
+
+        // Update heights
+        y.height = max(height(y.left), height(y.right)) + 1;
+        x.height = max(height(x.left), height(x.right)) + 1;
+
+        return x; // New root
+    }
+
+    private Node leftRotate(Node x) {
+        Node y = x.right;
+        Node T2 = y.left;
+
+        // Perform rotation
+        y.left = x;
+        x.right = T2;
+
+        // Update heights
+        x.height = max(height(x.left), height(x.right)) + 1;
+        y.height = max(height(y.left), height(y.right)) + 1;
+
+        return y; // New root
+    }
+
     public void insertOrder(int orderId, String customerName, String foodItem, double price, int destinationIndex) {
         if (destinationIndex < 0 || destinationIndex >= numPlaces) {
             System.out.println("Order failed. Invalid location index.");
@@ -67,19 +115,56 @@ public class FoodDetails {
         System.out.println("Order placed successfully.");
     }
 
-    private Node Insert(Node root, int orderId, String customerName, String foodItem, double price, int destinationIndex) {
-        if (root == null) {
+    private Node Insert(Node node, int orderId, String customerName, String foodItem, double price, int destinationIndex) {
+        // 1. Perform standard BST insertion
+        if (node == null) {
             return new Node(orderId, customerName, foodItem, price, destinationIndex);
         }
-        if (orderId < root.orderId) {
-            root.left = Insert(root.left, orderId, customerName, foodItem, price, destinationIndex);
-        } else if (orderId > root.orderId) {
-            root.right = Insert(root.right, orderId, customerName, foodItem, price, destinationIndex);
+
+        if (orderId < node.orderId) {
+            node.left = Insert(node.left, orderId, customerName, foodItem, price, destinationIndex);
+        } else if (orderId > node.orderId) {
+            node.right = Insert(node.right, orderId, customerName, foodItem, price, destinationIndex);
         } else {
             System.out.println("Order ID already exists.");
+            return node; // Duplicate IDs not allowed
         }
-        return root;  
+
+        // 2. Update height of this ancestor node
+        node.height = 1 + max(height(node.left), height(node.right));
+
+        // 3. Get the balance factor to check if it became unbalanced
+        int balance = getBalance(node);
+
+        // 4. If unbalanced, there are 4 rotation cases:
+
+        // Left Left Case
+        if (balance > 1 && orderId < node.left.orderId) {
+            return rightRotate(node);
+        }
+
+        // Right Right Case
+        if (balance < -1 && orderId > node.right.orderId) {
+            return leftRotate(node);
+        }
+
+        // Left Right Case
+        if (balance > 1 && orderId > node.left.orderId) {
+            node.left = leftRotate(node.left);
+            return rightRotate(node);
+        }
+
+        // Right Left Case
+        if (balance < -1 && orderId < node.right.orderId) {
+            node.right = rightRotate(node.right);
+            return leftRotate(node);
+        }
+
+        // Return the unchanged node pointer
+        return node;
     }
+    
+    // --- AVL TREE LOGIC END ---
 
     public void PostOrderDisplayCall() {
         PostOrderDisplay(root);
