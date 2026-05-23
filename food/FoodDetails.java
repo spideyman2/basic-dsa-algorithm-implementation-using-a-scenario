@@ -94,6 +94,19 @@ public class FoodDetails {
         printOrderDetails(root);
     }
 
+    public void PreOrderDisplayCall() {
+        PreOrderDisplay(root);
+    }
+
+    private void PreOrderDisplay(Node root) {
+        if (root == null) {
+            return;
+        }
+        printOrderDetails(root);
+        PreOrderDisplay(root.left);
+        PreOrderDisplay(root.right);
+    }
+
     public void SearchOrderIdCall(int key) {
         Node resultNode = SearchOrderId(root, key);
         if (resultNode == null) {
@@ -136,9 +149,11 @@ public class FoodDetails {
         System.out.print(root.orderId + " ");
         SortOrderId(root.right);
     }
+
     public int getNumPlaces() {
-    return numPlaces;
-}
+        return numPlaces;
+    }
+
     public void findShortestDeliveryRoute(int targetIndex) {
         if (numPlaces == 0 || targetIndex < 0 || targetIndex >= numPlaces) {
             System.out.println("Invalid delivery destination.");
